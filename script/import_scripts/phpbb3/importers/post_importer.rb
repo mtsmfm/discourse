@@ -18,11 +18,11 @@ module ImportScripts::PhpBB3
     end
 
     def map_to_import_ids(rows)
-      rows.map { |row| row[:post_id] }
+      rows.map { |row| @settings.prefix(row[:post_id]) }
     end
 
     def map_post(row)
-      imported_user_id = row[:post_username].blank? ? row[:poster_id] : row[:post_username]
+      imported_user_id = @settings.prefix(row[:post_username].blank? ? row[:poster_id] : row[:post_username])
       user_id = @lookup.user_id_from_imported_user_id(imported_user_id) || -1
       is_first_post = row[:post_id] == row[:topic_first_post_id]
 
@@ -54,15 +54,15 @@ module ImportScripts::PhpBB3
     def map_first_post(row, mapped)
       poll_data = add_poll(row, mapped) if @settings.import_polls
 
-      mapped[:category] = @lookup.category_id_from_imported_category_id(row[:forum_id])
+      mapped[:category] = @lookup.category_id_from_imported_category_id(@settings.prefix(row[:forum_id]))
       mapped[:title] = CGI.unescapeHTML(row[:topic_title]).strip[0...255]
       mapped[:pinned_at] = mapped[:created_at] unless row[:topic_type] == Constants::POST_NORMAL
       mapped[:pinned_globally] = row[:topic_type] == Constants::POST_GLOBAL
       mapped[:views] = row[:topic_views]
       mapped[:post_create_action] = proc do |post|
-        @permalink_importer.create_for_topic(post.topic, row[:topic_id])
-        @permalink_importer.create_for_post(post, row[:post_id])
-        @poll_importer.update_poll(row[:topic_id], post, poll_data) if poll_data
+        @permalink_importer.create_for_topic(post.topic, row[:topic_id]) # skip @settings.prefix because ID is used in permalink generation
+        @permalink_importer.create_for_post(post, row[:post_id]) # skip @settings.prefix because ID is used in permalink generation
+        @poll_importer.update_poll(@settings.prefix(row[:topic_id]), post, poll_data) if poll_data
         TopicViewItem.add(post.topic_id, row[:poster_ip], post.user_id, post.created_at, true)
       end
 
@@ -79,7 +79,7 @@ module ImportScripts::PhpBB3
 
       mapped[:topic_id] = parent[:topic_id]
       mapped[:post_create_action] = proc do |post|
-        @permalink_importer.create_for_post(post, row[:post_id])
+        @permalink_importer.create_for_post(post, row[:post_id]) # skip @settings.prefix because ID is used in permalink generation
         TopicViewItem.add(post.topic_id, row[:poster_ip], post.user_id, post.created_at, true)
       end
 
