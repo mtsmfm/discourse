@@ -1,8 +1,9 @@
 import { test, module } from "qunit";
 import DiscourseURL from "discourse/lib/url";
-
-var testMouseTrap;
+import sinon from "sinon";
 import KeyboardShortcuts from "discourse/lib/keyboard-shortcuts";
+
+let testMouseTrap;
 
 module("lib:keyboard-shortcuts", {
   beforeEach() {
@@ -26,7 +27,7 @@ module("lib:keyboard-shortcuts", {
       },
     };
 
-    sandbox.stub(DiscourseURL, "routeTo");
+    sinon.stub(DiscourseURL, "routeTo");
 
     $("#qunit-fixture").html(
       [
@@ -107,7 +108,7 @@ Object.keys(functionBindings).forEach((func) => {
   var testName = binding + " calls " + func;
 
   test(testName, function (assert) {
-    sandbox.stub(KeyboardShortcuts, func, function () {
+    sinon.stub(KeyboardShortcuts, func, function () {
       assert.ok(true, func + " is called when " + binding + " is triggered");
     });
     KeyboardShortcuts.bindEvents();
@@ -117,14 +118,14 @@ Object.keys(functionBindings).forEach((func) => {
 });
 
 test("selectDown calls _moveSelection with 1", (assert) => {
-  var stub = sandbox.stub(KeyboardShortcuts, "_moveSelection");
+  var stub = sinon.stub(KeyboardShortcuts, "_moveSelection");
 
   KeyboardShortcuts.selectDown();
   assert.ok(stub.calledWith(1), "_moveSelection is called with 1");
 });
 
 test("selectUp calls _moveSelection with -1", (assert) => {
-  var stub = sandbox.stub(KeyboardShortcuts, "_moveSelection");
+  var stub = sinon.stub(KeyboardShortcuts, "_moveSelection");
 
   KeyboardShortcuts.selectUp();
   assert.ok(stub.calledWith(-1), "_moveSelection is called with -1");
@@ -132,7 +133,7 @@ test("selectUp calls _moveSelection with -1", (assert) => {
 
 test("goBack calls history.back", (assert) => {
   var called = false;
-  sandbox.stub(history, "back").callsFake(function () {
+  sinon.stub(history, "back").callsFake(function () {
     called = true;
   });
 
@@ -141,14 +142,14 @@ test("goBack calls history.back", (assert) => {
 });
 
 test("nextSection calls _changeSection with 1", (assert) => {
-  var spy = sandbox.spy(KeyboardShortcuts, "_changeSection");
+  var spy = sinon.spy(KeyboardShortcuts, "_changeSection");
 
   KeyboardShortcuts.nextSection();
   assert.ok(spy.calledWith(1), "_changeSection is called with 1");
 });
 
 test("prevSection calls _changeSection with -1", (assert) => {
-  var spy = sandbox.spy(KeyboardShortcuts, "_changeSection");
+  var spy = sinon.spy(KeyboardShortcuts, "_changeSection");
 
   KeyboardShortcuts.prevSection();
   assert.ok(spy.calledWith(-1), "_changeSection is called with -1");
